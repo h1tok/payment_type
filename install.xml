@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<modification>
+    <name>TypePayment</name>
+    <code>default</code>
+    <version>1.0</version>
+    <author>Кузнецов Богдан</author>
+	<link>bodyau@mail.ru</link>
+    <file path="catalog/controller/checkout/payment_method.php">
+        <operation>
+            <search>
+            <![CDATA[
+                if ($method) {
+            ]]>
+            </search>
+            <add position="replace">
+            <![CDATA[
+                if (isset($method['quote'])) {
+                	foreach ($method['quote'] as $key => $val) {
+                        $method_data[$val['code']] = $val;
+                    }
+                }
+                elseif ($method) {
+            ]]>
+            </add>
+        </operation>
+    </file>
+    <file path="catalog/view/theme/*/template/checkout/payment_method.twig">
+        <operation>
+            <search>
+            <![CDATA[ {{ payment_method.title }} ]]>
+            </search>
+            <add position="replace">
+            <![CDATA[
+           {% if payment_method.img %}
+				<img src="{{ payment_method.img }}"/>
+			  {% endif %}
+				 {{ payment_method.title }}
+            ]]>
+            </add>
+        </operation>
+	</file>
+	<file path="catalog/view/theme/*/template/checkout/simplecheckout_payment.twig">
+        <operation>
+            <search>
+            <![CDATA[ <input type="radio" data-onchange="reloadAll" name="payment_method" value="{{ payment_method['code'] }}" {{ payment_method['dummy'] is not empty ? 'disabled="disabled"' : '' }} {{ payment_method['dummy'] is not empty ? 'data-dummy="true"' : '' }} id="{{ payment_method['code'] }}" {% if payment_method['code'] == code %}checked="checked"{% endif %} /> ]]>
+            </search>
+            <add position="after">
+            <![CDATA[
+			{% if payment_method['img'] is not empty %}
+                <img src="{{ payment_method['img'] }}" width="60" height="32" border="0" style="display:block;margin:3px;">
+            {% endif %}
+            ]]>
+            </add>
+        </operation>
+	</file>
+	 <file path="catalog/controller/checkout/confirm.php">
+        <operation>
+            <search>
+            <![CDATA[
+                $data['payment'] = $this->load->controller('extension/payment/' . $this->session->data['payment_method']['code']);
+            ]]>
+            </search>
+            <add position="replace">
+            <![CDATA[
+                $payment_code = explode('.and.', $this->session->data['payment_method']['code']);
+                $data['payment'] = $this->load->controller('extension/payment/' . $payment_code[0]);
+            ]]>
+            </add>
+        </operation>
+    </file>
+	<file path="admin/controller/sale/order.php">
+        <operation error="log">
+            <search><![CDATA[
+                   $data['tabs'] = array();
+                ]]>
+            </search>
+            <add position="after"><![CDATA[
+                    $payment_code = explode(".and.", $order_info['payment_code']);
+                    $order_info['payment_code'] = $payment_code[0];
+                ]]>
+            </add>
+        </operation>
+    </file>
+	  <file path="catalog/controller/api/payment.php">
+        <operation error="log">
+            <search><![CDATA[
+                if ($method) {
+            ]]>
+            </search>
+            <add position="replace"><![CDATA[
+                if (isset($method['quote'])) {
+                    foreach ($method['quote'] as $val) {
+                        $json['payment_methods'][$val['code']] = $val;
+                    }
+                }
+                elseif ($method) {
+            ]]>
+            </add>
+        </operation>
+    </file>
+</modification>
